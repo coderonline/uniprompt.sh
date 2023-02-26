@@ -38,14 +38,14 @@ function getClockSymbol() {
   local CLK_SYMBOLS=" "
   local HOUR=$(date +%I | sed -e 's/^0//')
   test $HOUR -ge 12 && HOUR=$(expr $HOUR - 12) # middach
-  test $(date +%M) -gt 30 && HOUR=$(expr $HOUR + 1) # floor
-  echo -ne ${CLK_SYMBOLS:HOUR:1}
+  test "$(date +%M)" -gt "30" && HOUR=$(expr "$HOUR" + 1) # floor
+  echo -ne "${CLK_SYMBOLS:HOUR:1}"
 }
 
 function getUserSymbol() {
   case "$USER" in
-    root)  echo "⚙️ " ;;
-    *)     echo " " ;;
+    root)  echo -n "⚙️ " ;;
+    *)     echo -n " " ;;
   esac
 }
 
@@ -62,43 +62,70 @@ function getGitBranch() {
   # echo -ne "${GIT_SUMMARY:+ - $GIT_SUMMARY}"
 }
 
+function getHgBookmark() {
+  if test -f .hg/bookmarks.current ; then
+    echo -ne "  $(cat .hg/bookmarks.current)"
+  # TODO: alternative is too slow
+  # else
+  #   hg log -r . -T '{activebookmark}'
+  fi
+}
+
+function getVCS() {
+    PATHBEFORE=$PWD
+    while [ true ]; do
+        test -d .hg  && getHgBookmark
+        test -d .git && getGitBranch
+        cd ..
+        test $OLDPWD == $PWD && break
+    done
+    cd $PATHBEFORE
+}
+
 function prompt() {
   setWindowTitle $?
-  echo -e "\n" $( # make this write as atomic as possible to avoid flickering
+  echo # make this write as atomic as possible to avoid flickering
   tput cuf $(($(tput cols)-15))
-  echo -ne $COLOR_BACKGROUND
-  echo -ne "[49m" # reset background
-  echo -ne "[27m" # inverse revert
+  echo -ne "$COLOR_BACKGROUND" 
+  echo -ne "\e[49m"             # reset background
+  echo -ne "\e[27m"             # inverse revert
   echo -ne ""
-  echo -ne "[7m"
-  echo -ne $COLOR_FOREGROUND
+  echo -ne "\e[7m"
+  echo -ne "$COLOR_FOREGROUND"
   echo -ne " "
   getClockSymbol
   echo -ne " "
-  date +%H:%M:%S
+  echo -ne "$(date +%H:%M:%S)"
   echo -ne " "
   echo -ne "░"
-  echo -ne ""
+  echo -ne "\r"
   echo -ne "░"
   echo -ne " "
   getUserSymbol
-  echo -ne $USER@$HOSTNAME
+  echo -ne "$USER@$HOSTNAME"
   echo -ne " "
   echo -ne " "
-  getGitBranch
+  getVCS
   echo -ne " "
-  echo -ne "[49m" # reset background
-  echo -ne "[27m" # inverse revert
+  echo -ne "\e[49m" # reset background
+  echo -ne "\e[27m" # inverse revert
   echo -ne ""
-  echo -ne "[0m"
-  echo ""
-  echo ""
-  ) "\n"
+  echo -ne "\e[0m"
+  echo
+  echo
+}
+
+function setWindowTitleToCurrentCommand() {
+  echo -ne "\033]0; ${BASH_COMMAND}\007"
 }
 
 export PS1=" \[\033[38;2;210;160;50m\]  \[\033[0m\]\w  "
-trap 'echo -ne "]0; ${BASH_COMMAND}"' DEBUG
+# trap 'echo -ne "\033]0; ${BASH_COMMAND}\007"' DEBUG
 export PROMPT_COMMAND=prompt
+
+# TODO: does not work with current versions of bash, because they seem to spawn
+# a sub-shell and I get a strange PS1 string back from it.
+# trap setWindowTitleToCurrentCommand debug
 
 # TODO
 # shopt -s checkwinsize
