@@ -53,7 +53,7 @@ function getUserSymbol() {
 function getGitBranch() {
   GIT_BRANCH=""
   if git rev-parse --git-dir 1>/dev/null 2>/dev/null; then
-    GIT_BRANCH=$(git branch 2>/dev/null | grep '^\*' | colrm 1 2)
+    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     GIT_BRANCH_DESCRIPTION=$(git config branch."$GIT_BRANCH".description 2>/dev/null)
   fi
   echo -ne "${GIT_BRANCH:+  │    $GIT_BRANCH}"
@@ -116,8 +116,8 @@ function setWindowTitleToCurrentCommand() {
   # this function replaced
   # PS0="]0;⏳${PWD} @ ${HOSTNAME} $PROMPT_COMMAND"
   local CMD
-  CMD=${BASH_COMMAND//[^A-Za-z0-9 -]//g}
-  echo -ne "\e]0; ${CMD@E}\007"
+  CMD=${BASH_COMMAND//[^A-Za-z0-9 -\.]/}
+  echo -ne "\e]0;  ${CMD@E}\007"
 }
 trap setWindowTitleToCurrentCommand debug
 
