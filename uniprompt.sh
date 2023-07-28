@@ -53,11 +53,11 @@ function getUserSymbol() {
 function getGitBranch() {
   GIT_BRANCH=""
   if git rev-parse --git-dir 1>/dev/null 2>/dev/null; then
-    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    GIT_BRANCH=$(git branch --show-current 2>/dev/null)
     GIT_BRANCH_DESCRIPTION=$(git config branch."$GIT_BRANCH".description 2>/dev/null)
+    echo -ne "${GIT_BRANCH:+  │    $GIT_BRANCH}"
+    echo -ne "${GIT_BRANCH_DESCRIPTION:+ - $GIT_BRANCH_DESCRIPTION}"
   fi
-  echo -ne "${GIT_BRANCH:+  │    $GIT_BRANCH}"
-  echo -ne "${GIT_BRANCH_DESCRIPTION:+ - $GIT_BRANCH_DESCRIPTION}"
 }
 
 function getHgBookmark() {
@@ -71,8 +71,8 @@ function getHgBookmark() {
 function getVCS() {
     pushd . > /dev/null
     while true; do
-        test -d .hg  && getHgBookmark
-        test -d .git && getGitBranch
+        test -d .hg  && getHgBookmark && break
+        test -d .git && getGitBranch  && break
         cd ..
         test "$OLDPWD" == "$PWD" && break
     done
