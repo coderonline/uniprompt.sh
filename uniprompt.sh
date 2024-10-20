@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 # sanity checks first: decide, when NOT to run...
-[ -z "$PS1" ] && return
+[ -z "$PS1" ] && exit
 
 # to begin with: a random background color for each shell makes them easier to
 # distinguish. Most virtual terminal emulators support TRUECOLOR today.
@@ -71,8 +71,8 @@ function getHgBookmark() {
 function getVCS() {
     pushd . > /dev/null
     while true; do
-        test -d .hg  && getHgBookmark && break
-        test -d .git && getGitBranch  && break
+        test -e .hg  && getHgBookmark && break
+        test -e .git && getGitBranch  && break
         cd ..
         test "$OLDPWD" == "$PWD" && break
     done
