@@ -29,7 +29,7 @@ function setWindowTitle() {
     echo -ne "\e]0; ${PWD}"  # window title
     printf "\e[0;33m%*s%s[0m" $(($(tput cols)-6)) "" "  $exit_status"
   else
-    echo -ne "\e]0; ${PWD}"  # window title
+    echo -ne "\e]0;  ${PWD}"  # window title
   fi
 }
 
